@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>WinAssist AI Agent</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="ナビゲーション">
+        <div class="brand">
+          <div class="brand-mark">WA</div>
+          <div>
+            <h1>WinAssist</h1>
+            <p>Windows Tech Support AI</p>
+          </div>
+        </div>
+
+        <nav class="nav-list" aria-label="処理ステップ">
+          <a href="#workspace" class="active">Case Console</a>
+          <a href="#pipeline">Agent Pipeline</a>
+          <a href="#knowledge">Knowledge Base</a>
+          <a href="#audit">Audit Trail</a>
+        </nav>
+
+        <section class="system-health" aria-label="システム状態">
+          <h2>System</h2>
+          <div class="health-row">
+            <span>LLM Gateway</span>
+            <strong>Ready</strong>
+          </div>
+          <div class="health-row">
+            <span>RAG Index</span>
+            <strong>18 docs</strong>
+          </div>
+          <div class="health-row">
+            <span>Policy Guard</span>
+            <strong>On</strong>
+          </div>
+        </section>
+      </aside>
+
+      <main>
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Agent Workspace</p>
+            <h2>Windows向け技術サポートAIエージェント</h2>
+          </div>
+          <div class="topbar-actions">
+            <button type="button" id="newCaseBtn" class="secondary">New Case</button>
+            <button type="button" id="runDemoBtn">Demo Run</button>
+          </div>
+        </header>
+
+        <section id="workspace" class="workspace-grid">
+          <section class="panel intake-panel" aria-labelledby="intakeTitle">
+            <div class="panel-heading">
+              <div>
+                <p class="step-label">[1] User Input</p>
+                <h3 id="intakeTitle">問い合わせ入力</h3>
+              </div>
+              <span class="case-badge" id="caseId">CASE-260526-001</span>
+            </div>
+
+            <label for="issueInput">ユーザーからの相談内容</label>
+            <textarea id="issueInput" rows="8">Windows 11 のPCで、VPN接続後に社内ファイルサーバーへアクセスできません。Wi-Fiはつながっていて、Teamsは使えます。エラーは「ネットワーク パスが見つかりません」です。</textarea>
+
+            <div class="input-grid">
+              <label>
+                端末OS
+                <select id="osSelect">
+                  <option>Windows 11</option>
+                  <option>Windows 10</option>
+                  <option>Windows Server 2022</option>
+                </select>
+              </label>
+              <label>
+                重要度
+                <select id="severitySelect">
+                  <option>Medium</option>
+                  <option>Low</option>
+                  <option>High</option>
+                  <option>Critical</option>
+                </select>
+              </label>
+              <label>
+                ユーザー種別
+                <select id="userTypeSelect">
+                  <option>Employee</option>
+                  <option>Admin</option>
+                  <option>Executive</option>
+                </select>
+              </label>
+            </div>
+
+            <button type="button" id="processBtn" class="wide-button">Run Agent Pipeline</button>
+          </section>
+
+          <section class="panel status-panel" aria-labelledby="statusTitle">
+            <div class="panel-heading">
+              <div>
+                <p class="step-label">[2] Session / Context</p>
+                <h3 id="statusTitle">セッション状態</h3>
+              </div>
+              <span id="statusPill" class="status-pill">待機中</span>
+            </div>
+
+            <div class="context-list">
+              <div>
+                <span>ユーザー</span>
+                <strong id="ctxUser">Employee</strong>
+              </div>
+              <div>
+                <span>対象OS</span>
+                <strong id="ctxOs">Windows 11</strong>
+              </div>
+              <div>
+                <span>会話履歴</span>
+                <strong id="ctxTurns">0 turns</strong>
+              </div>
+              <div>
+                <span>現在のルート</span>
+                <strong id="ctxRoute">未判定</strong>
+              </div>
+            </div>
+
+            <div class="confidence-box">
+              <div class="confidence-head">
+                <span>[7] Confidence</span>
+                <strong id="confidenceValue">--%</strong>
+              </div>
+              <div class="meter" aria-hidden="true">
+                <span id="confidenceMeter"></span>
+              </div>
+              <p id="confidenceText">処理後に回答確度を表示します。</p>
+            </div>
+          </section>
+        </section>
+
+        <section id="pipeline" class="pipeline-section" aria-labelledby="pipelineTitle">
+          <div class="section-title">
+            <div>
+              <p class="eyebrow">Processing Flow</p>
+              <h3 id="pipelineTitle">13段階パイプライン</h3>
+            </div>
+          </div>
+          <div class="pipeline" id="pipelineSteps"></div>
+        </section>
+
+        <section class="results-grid">
+          <section class="panel" aria-labelledby="structureTitle">
+            <div class="panel-heading">
+              <div>
+                <p class="step-label">[3] LLM前処理 / [4] Intent Entity</p>
+                <h3 id="structureTitle">構造化結果</h3>
+              </div>
+            </div>
+            <div class="json-block" id="structuredOutput"></div>
+          </section>
+
+          <section id="knowledge" class="panel" aria-labelledby="ragTitle">
+            <div class="panel-heading">
+              <div>
+                <p class="step-label">[6] RAG検索</p>
+                <h3 id="ragTitle">関連ナレッジ</h3>
+              </div>
+            </div>
+            <div class="rag-list" id="ragResults"></div>
+          </section>
+
+          <section class="panel" aria-labelledby="slotsTitle">
+            <div class="panel-heading">
+              <div>
+                <p class="step-label">[8] Missing Slot</p>
+                <h3 id="slotsTitle">追加確認</h3>
+              </div>
+            </div>
+            <ul class="slot-list" id="missingSlots"></ul>
+          </section>
+
+          <section class="panel" aria-labelledby="toolTitle">
+            <div class="panel-heading">
+              <div>
+                <p class="step-label">[9] Tool / API</p>
+                <h3 id="toolTitle">実行候補</h3>
+              </div>
+            </div>
+            <div class="tool-list" id="toolActions"></div>
+          </section>
+        </section>
+
+        <section class="answer-grid">
+          <section class="panel response-panel" aria-labelledby="answerTitle">
+            <div class="panel-heading">
+              <div>
+                <p class="step-label">[10] Policy Check / [11] Response</p>
+                <h3 id="answerTitle">生成回答</h3>
+              </div>
+              <span id="policyStatus" class="status-pill">未検査</span>
+            </div>
+            <article id="answerOutput" class="answer-output">
+              問い合わせを処理すると、ユーザー向け回答案がここに表示されます。
+            </article>
+          </section>
+
+          <section id="audit" class="panel" aria-labelledby="auditTitle">
+            <div class="panel-heading">
+              <div>
+                <p class="step-label">[12] Human Escalation / [13] Logging</p>
+                <h3 id="auditTitle">監査ログ</h3>
+              </div>
+            </div>
+            <ol class="audit-log" id="auditLog">
+              <li>セッションを初期化しました。</li>
+            </ol>
+          </section>
+        </section>
+      </main>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
